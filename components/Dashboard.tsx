@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { SedeData, Escuela } from "@/lib/data";
+import type { SedeData, Escuela, TipoSecundaria } from "@/lib/data";
 import SedeFilter from "./SedeFilter";
 import EscuelaCard from "./EscuelaCard";
 import ProfesionalesModal from "./ProfesionalesModal";
@@ -11,14 +11,51 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ data }: DashboardProps) {
+  const [selectedTipo, setSelectedTipo] = useState<TipoSecundaria>("orientada");
   const [selectedSede, setSelectedSede] = useState<number | null>(null);
   const [modalEscuela, setModalEscuela] = useState<Escuela | null>(null);
 
-  const sedes = data.map((s) => s.sede);
-  const currentSede = data.find((s) => s.sede === selectedSede);
+  const tipoData = data.filter((s) => s.tipo === selectedTipo);
+  const sedes = tipoData.map((s) => s.sede);
+  const currentSede = tipoData.find((s) => s.sede === selectedSede);
+
+  function handleTipoChange(tipo: TipoSecundaria) {
+    setSelectedTipo(tipo);
+    setSelectedSede(null);
+  }
 
   return (
     <>
+      {/* Tipo toggle */}
+      <section className="mb-8">
+        <h2 className="text-center text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">
+          Tipo de secundaria
+        </h2>
+        <div className="flex justify-center gap-3">
+          <button
+            onClick={() => handleTipoChange("orientada")}
+            className={`px-6 py-2.5 rounded-full font-semibold text-sm transition-colors cursor-pointer ${
+              selectedTipo === "orientada"
+                ? "bg-[#003087] text-white shadow-md"
+                : "bg-white text-[#003087] border-2 border-[#003087] hover:bg-[#003087]/10"
+            }`}
+          >
+            Secundaria Orientada
+          </button>
+          <button
+            onClick={() => handleTipoChange("tecnica")}
+            className={`px-6 py-2.5 rounded-full font-semibold text-sm transition-colors cursor-pointer ${
+              selectedTipo === "tecnica"
+                ? "bg-[#003087] text-white shadow-md"
+                : "bg-white text-[#003087] border-2 border-[#003087] hover:bg-[#003087]/10"
+            }`}
+          >
+            Secundaria Técnica
+          </button>
+        </div>
+      </section>
+
+      {/* Sede filter */}
       <section className="mb-8">
         <h2 className="text-center text-sm font-medium text-gray-500 uppercase tracking-wider mb-4">
           Seleccione una sede
@@ -78,7 +115,12 @@ export default function Dashboard({ data }: DashboardProps) {
           <h2 className="text-xl font-semibold text-gray-800 mb-4">
             Sede {currentSede.sede}{" "}
             <span className="text-gray-400 font-normal text-base">
-              — {currentSede.escuelas.length} escuela
+              —{" "}
+              {currentSede.tipo === "orientada"
+                ? "Secundaria Orientada"
+                : "Secundaria Técnica"}
+              {" · "}
+              {currentSede.escuelas.length} escuela
               {currentSede.escuelas.length !== 1 ? "s" : ""}
             </span>
           </h2>
