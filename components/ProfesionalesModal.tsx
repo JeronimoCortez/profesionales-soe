@@ -116,13 +116,18 @@ export default function ProfesionalesModal({
                     {prof.nombre}
                   </td>
                   <td className="py-3 text-sm">
-                    {prof.telefono ? (
-                      <a
-                        href={`tel:${prof.telefono}`}
-                        className="text-[#003087] hover:underline"
-                      >
-                        {prof.telefono}
-                      </a>
+                    {prof.telefonos.length > 0 ? (
+                      <div className="flex flex-col gap-1">
+                        {prof.telefonos.map((telefono, j) => (
+                          <a
+                            key={j}
+                            href={`tel:${telefono}`}
+                            className="text-[#003087] hover:underline"
+                          >
+                            {telefono}
+                          </a>
+                        ))}
+                      </div>
                     ) : (
                       <span className="text-gray-400">—</span>
                     )}

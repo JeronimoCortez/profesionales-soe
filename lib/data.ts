@@ -5,7 +5,7 @@ import fs from "fs";
 export interface Profesional {
   nombre: string;
   profesion: string;
-  telefono: string;
+  telefonos: string[];
 }
 
 export interface Escuela {
@@ -22,9 +22,14 @@ export interface SedeData {
   escuelas: Escuela[];
 }
 
-function normalizarTelefono(tel: unknown): string {
-  if (tel === undefined || tel === null) return "";
-  return String(tel).trim();
+// Algunas celdas listan varios nombres o teléfonos separados por "/"
+// (ej. "Nombre1/Nombre2" con "Tel1/Tel2"), por eso se separan en listas.
+function splitLista(raw: unknown): string[] {
+  if (raw === undefined || raw === null) return [];
+  return String(raw)
+    .split("/")
+    .map((s) => s.trim())
+    .filter(Boolean);
 }
 
 export function getData(): SedeData[] {
@@ -100,13 +105,31 @@ export function getData(): SedeData[] {
     }
 
     const cargo = row["Cargos SOE"];
-    const nombre = row["Apellido y Nombre"];
-    if (cargo && nombre) {
-      escuelasMap.get(currentEscNumero)!.profesionales.push({
-        nombre: String(nombre).trim(),
-        profesion: String(cargo).trim(),
-        telefono: normalizarTelefono(row["Teléfono de contacto"]),
-      });
+    const nombreRaw = row["Apellido y Nombre"];
+    if (cargo && nombreRaw) {
+      const profesion = String(cargo).trim();
+      const nombres = splitLista(nombreRaw);
+      const telefonos = splitLista(row["Teléfono de contacto"]);
+      const profesionales = escuelasMap.get(currentEscNumero)!.profesionales;
+
+      if (nombres.length > 1 && telefonos.length === nombres.length) {
+        // Ej: "Nombre1/Nombre2" con "Tel1/Tel2" -> cada nombre con su teléfono
+        nombres.forEach((nombre, i) => {
+          profesionales.push({ nombre, profesion, telefonos: [telefonos[i]] });
+        });
+      } else if (nombres.length > 1) {
+        // Varios nombres sin una correspondencia clara de teléfonos
+        nombres.forEach((nombre) => {
+          profesionales.push({ nombre, profesion, telefonos: [] });
+        });
+      } else {
+        // Un solo profesional, posiblemente con varios teléfonos de contacto
+        profesionales.push({
+          nombre: nombres[0] ?? String(nombreRaw).trim(),
+          profesion,
+          telefonos,
+        });
+      }
     }
   }
 
